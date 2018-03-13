@@ -1,0 +1,14 @@
+#version 440
+
+uniform mat4 mProjection, mModelView;
+
+layout(location = 0) in vec3 vVertex;
+layout(location = 3) in vec3 vTexture;
+
+out vec3 color;
+
+void main()
+{
+	color = vTexture;
+	gl_Position = mProjection * mModelView * vec4(vVertex,1.0f);
+}
