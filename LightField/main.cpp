@@ -3,11 +3,7 @@
 #include "TextureManager.h"
 #include "VBOQuad.h" 
 #include "Menu.h"
-#include <iostream>
-#include <fstream>
-
-using std::cout;
-using std::endl;
+#include "LightField.h"
 
 
 
@@ -18,6 +14,8 @@ namespace glfwFunc
 	int WINDOW_WIDTH = 1024;
 	int WINDOW_HEIGHT = 768;
 	std::string strNameWindow = "Light Fields";
+
+	LightField mLF;
 
 	const float NCP = 1.0f;
 	const float FCP = 10.0f;
@@ -32,12 +30,14 @@ namespace glfwFunc
 	glm::mat4x4 mProjMatrix, mModelViewMatrix, mMVP;
 
 	//Variables to do rotation
-	glm::quat quater = glm::quat(0.8847f,-.201f, 0.398f, -0.1339f), q2; //begin with a diagonal view
+	glm::quat quater = glm::quat(), q2; //begin with a diagonal view
 	glm::mat4x4 RotationMat = glm::mat4x4();
 	float angle = 0;
 	float *vector=(float*)malloc(sizeof(float)*3);
 	double lastx, lasty;
 	bool pres = false;
+
+	int corteX = 0, corteY = 0;
 
 	///< Callback function used by GLFW to capture some possible error.
 	void errorCB(int error, const char* description)
@@ -63,6 +63,22 @@ namespace glfwFunc
 				case GLFW_KEY_ESCAPE:
 				case GLFW_KEY_Q:
 					glfwSetWindowShouldClose(window, GL_TRUE);
+					break;
+				case GLFW_KEY_A:
+					corteX -= 1;
+					if (corteX < 0) corteX = 0;
+					break;
+				case GLFW_KEY_D:
+					corteX += 1;
+					if (corteX > 15) corteX = 15;
+					break;
+				case GLFW_KEY_W:
+					corteY += 1;
+					if (corteY > 15) corteY = 15;
+					break;
+				case GLFW_KEY_S:
+					corteY -= 1;
+					if (corteY < 0) corteY = 0;
 					break;
 				case GLFW_KEY_SPACE:
 				{
@@ -164,18 +180,16 @@ namespace glfwFunc
 		//Draw a Cube
 		m_program.use();
 		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			//bind texture
+			glActiveTexture(GL_TEXTURE0);
+			TextureManager::Inst().BindTexture(LIGHT_FILED_TEXTURE);
 
 
 			m_program.setUniform("mModelView", mModelViewMatrix);
-
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-			//glPointSize(10);
+			m_program.setUniform("corteX", corteX);
+			m_program.setUniform("corteY", corteY);
+			printf("%d %d\n ", corteX, corteY);
 			VBOQuad::Instance().Draw();
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-			glDisable(GL_BLEND);
 		}
 
 
@@ -203,6 +217,13 @@ namespace glfwFunc
 		printf("Vendor: %s\n", glGetString(GL_VENDOR));
 		printf("Renderer: %s\n", glGetString(GL_RENDERER));
 
+		//check if the images inside the directory have the correct format
+		mLF.setPath("./images");
+		if (!mLF.checkDirectory())
+		{
+			printf("Problem with the images\n");
+			exit(EXIT_FAILURE);
+		}
 
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
@@ -225,8 +246,17 @@ namespace glfwFunc
 			m_program.link();
 		}
 		catch (GLSLProgramException & e) {
-			std::cerr << e.what() << std::endl;
-			std::cin.get();
+			printf("%s\n", e.what());
+			char s[1000];
+			scanf("%s",s);
+			exit(EXIT_FAILURE);
+		}
+
+		//read all the images from the directory
+		if (!mLF.readLightField()) {
+			printf("Problem reading an image\n");
+			char s[1000];
+			scanf("%s", s);
 			exit(EXIT_FAILURE);
 		}
 
@@ -247,6 +277,8 @@ namespace glfwFunc
 		glfwDestroyWindow(glfwWindow);
 	}
 }
+
+
 
 int main(int argc, char** argv)
 {

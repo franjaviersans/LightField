@@ -2,13 +2,13 @@
 
 uniform mat4 mProjection, mModelView;
 
-layout(location = 0) in vec3 vVertex;
-layout(location = 3) in vec3 vTexture;
+layout(location = 0) in vec2 vVertex;
+layout(location = 3) in vec2 vTexture;
 
-out vec3 color;
+out vec2 texPos;
 
 void main()
 {
-	color = vTexture;
-	gl_Position = mProjection * mModelView * vec4(vVertex,1.0f);
+	texPos = vTexture;
+	gl_Position = mProjection * mModelView * vec4(vVertex, 0.0f,1.0f);
 }

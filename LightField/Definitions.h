@@ -37,7 +37,8 @@
 
 
 enum textureIDS {
-	TEXTURE_T =0
+	LIGHT_FILED_TEXTURE = 0,
+	NUM_TEXTURES
 };
 
 #endif
